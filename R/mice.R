@@ -53,6 +53,7 @@ hist(mouse.data$IMPC_HEM_034_001) # slightly right skewed
 
 # create data frame with all variables to impute + predictors
 impMICE <- as.data.frame(cbind(mouse.data[,2:3], mouse.data[,5:26]))
+colnames(impMICE)
 
 # imputation method: pmm for skewed variables, linear model for normally distributed variables
 method <- c("", "", "", "", "", "", "", "", "", "", "", "pmm", "norm", "", "norm", "", "", "pmm", "", "", "", "pmm", "", "")
@@ -94,6 +95,43 @@ boxplot(IMPC_HEM_029_001 ~ geno, data = complete_mouse)
 boxplot(IMPC_HEM_031_001 ~ geno, data = complete_mouse)
 boxplot(IMPC_HEM_034_001 ~ geno, data = complete_mouse)
 boxplot(IMPC_HEM_038_001 ~ geno, data = complete_mouse)
+
+#################################
+# simple simulation MICE        #
+#################################
+library(Metrics) # mse
+
+# delete one (randomly selected) variable for (randomly selected) knock-out condition 
+#   and assess predictive accuracy via MSE
+
+# consider only complete observations
+full_mouse <- mouse.data[-which(mouse.data$geno %in% c("1796_1", "3621_1", "4045_1", "3803_1", "3887_1")),]
+
+# randomly select one variable + one knock-out condition
+set.seed(29062016)
+sample(unique(full_mouse$geno)[2:9], 1) # 727_1
+sample(colnames(full_mouse)[5:26], 1)   # IMPC_HEM_005_001
+
+# save true value + delete in full_mouse
+true <- full_mouse$IMPC_HEM_005_001[full_mouse$geno == "727_1"]
+full_mouse$IMPC_HEM_005_001[full_mouse$geno == "727_1"] <- NA
+
+# distribution of the missing variable
+hist(full_mouse$IMPC_HEM_005_001) # normal
+
+# apply MICE
+impMICE <- as.data.frame(cbind(full_mouse[,2:3], full_mouse[,5:26]))
+colnames(impMICE)
+method <- c("", "", "", "", "", "", "norm", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
+pred <- matrix(0, nrow = ncol(impMICE), ncol = ncol(impMICE))
+pred[7,] <- rep(1, ncol(impMICE))
+diag(pred) <- rep(0, ncol(impMICE))
+mod <- mice(impMICE, m = 30, method = method, predictorMatrix = pred)
+
+# extract predictions
+pred005 <- apply(mod$imp$IMPC_HEM_005_001, 1, mean)
+mse(actual = true, predicted = pred005) # not bad
+
 
 #################################
 # simulation MICE               #
