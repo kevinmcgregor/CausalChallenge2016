@@ -133,24 +133,6 @@ pred005 <- apply(mod$imp$IMPC_HEM_005_001, 1, mean)
 mse(actual = true, predicted = pred005) # not bad
 
 
-#################################
-# simulation MICE               #
-#################################
-
-# For discussion:
-#   - simulations: (1) delete one (randomly selected) variable for (randomly selected) knock-out condition 
-#                      and repetively apply MICE (e.g. 1000 times) with different imputation scenarios 
-#                  OR  
-#                  (2) for each "simulated dataset" (e.g. 1000), delete one (randomly selected) variable for (randomly selected) knock-out condition 
-#                      and repetively apply (naive) MICE i.e. always use the same imputation model
-#   - measure in each simulation: MSE
-#   - parameters to consider: validity of the imputation model (variable selection and form of the model)
-#                             this we really don't know, we want to see whether MICE performs well in predicting missing values with a naive imputation model
-
-
-
-
-
 
 
 
