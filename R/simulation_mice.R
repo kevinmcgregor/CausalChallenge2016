@@ -1,6 +1,6 @@
-#################################
-# simulation MICE               #
-#################################
+####################################
+# simulation MICE                  #
+####################################
 
 # For discussion:
 #   - simulations: (1) delete one (randomly selected) variable for (randomly selected) knock-out condition 
@@ -38,9 +38,9 @@ for(i in 1:Nsimul)
   method_norm <- c("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
   method_pmm <- c("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
   
-  # randomly select one variable + one knock-out condition
-  NAgeno <- sample(unique(temp$geno)[2:9], 1) # 727_1
-  NAvar <- sample(colnames(temp)[5:26], 1)   # IMPC_HEM_005_001
+  # randomly select one variable among the 5 variables with missing values + one knock-out condition
+  NAgeno <- sample(unique(temp$geno)[2:9], 1)
+  NAvar <- sample(c("IMPC_HEM_027_001", "IMPC_HEM_029_001", "IMPC_HEM_031_001", "IMPC_HEM_034_001", "IMPC_HEM_038_001"), 1) 
   
   # save true value + delete in temp
   true <- temp[temp$geno == NAgeno, colnames(temp) == NAvar]
@@ -90,15 +90,37 @@ res <- as.data.frame(res)
 colnames(res) <- c("Variable", "Genotype", "MSE_norm", "MSE_pmm")
 write.csv(res, file = "simulation_mice.csv")
 
+# use this command when running on gate.mcgill 
+quit(save = "no")
 
+# I initially ran the simulations for all phenotypic measurements i.e. at each iteration I would sample any of the 22 
+# phenotypic measurements and assess the performance of MICE for predicting that measurement
+# However, we are really only interested in the performance of MICE for the 5 variables we will have to eventually impute
+# So instead of sampling from all phenotypic measurements, I sampled only from the 5 variables of interest.
 
+####################################
+# analyze results simulations MICE #
+####################################
 
+results <- read.csv("simulation_mice.csv")
 
+# View distribution of MSE with norm vs pmm for the 5 variables to impute
+par(mfrow = c(1, 2))
+boxplot(MSE_norm ~ Variable, data = results, main = "Imputation via OLS")
+boxplot(MSE_pmm ~ Variable, data = results, main = "Imputation via PMM")
 
+boxplot(MSE_norm ~ Variable, data = results, main = "Imputation via OLS", ylim = c(0, 0.4))
+boxplot(MSE_pmm ~ Variable, data = results, main = "Imputation via PMM", ylim = c(0, 0.4))
 
+# test difference mse_norm vs mse_pmm for each variable
+t.test(x = results$MSE_norm[results$Variable == "IMPC_HEM_027_001"], y = results$MSE_pmm[results$Variable == "IMPC_HEM_027_001"]) # no
+t.test(x = results$MSE_norm[results$Variable == "IMPC_HEM_029_001"], y = results$MSE_pmm[results$Variable == "IMPC_HEM_029_001"]) # yes - norm is better
+t.test(x = results$MSE_norm[results$Variable == "IMPC_HEM_031_001"], y = results$MSE_pmm[results$Variable == "IMPC_HEM_031_001"]) # yes - norm is better
+t.test(x = results$MSE_norm[results$Variable == "IMPC_HEM_034_001"], y = results$MSE_pmm[results$Variable == "IMPC_HEM_034_001"]) # no - both very good, pmm is better
+t.test(x = results$MSE_norm[results$Variable == "IMPC_HEM_038_001"], y = results$MSE_pmm[results$Variable == "IMPC_HEM_038_001"]) # yes - norm is better
 
-
-
+# Tentative conclusion: MICE works well for all variables except 027 = Red blood cell distribution width
+# Next step: include litter effect
 
 
 
