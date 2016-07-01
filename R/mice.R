@@ -41,11 +41,11 @@ library(mice)
 
 # look at the distribution of the missing variables
 
-hist(mouse.data$IMPC_HEM_031_001) # normal, some small extreme values
 hist(mouse.data$IMPC_HEM_027_001) # right skewed
 hist(mouse.data$IMPC_HEM_029_001) # normal, some large extreme values
-hist(mouse.data$IMPC_HEM_038_001) # right skewed
+hist(mouse.data$IMPC_HEM_031_001) # normal, some small extreme values
 hist(mouse.data$IMPC_HEM_034_001) # slightly right skewed
+hist(mouse.data$IMPC_HEM_038_001) # right skewed
 # extreme values for 031 and 029 -> related to litter effect??
 # skewed variables: transformation or predictive mean matching
 
