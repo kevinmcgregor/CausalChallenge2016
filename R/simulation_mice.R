@@ -77,6 +77,12 @@ for(i in 1:Nsimul)
   res[i, ] <- c(NAvar, NAgeno, mse_norm, mse_pmm)
   
   print(i)
+  print("TRUE: ")
+  print(true)
+  print("PRED_NORM: ")
+  print(predic_norm)
+  print("PRED_PMM: ")
+  print(predic_pmm)
 }
 res[,3] <- as.numeric(res[,3])
 res[,4] <- as.numeric(res[,4])
