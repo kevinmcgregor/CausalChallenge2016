@@ -61,9 +61,73 @@ allphen_mse = apply(as.matrix(mouse.data[,cols_to_include]), 2, getMSE, litter=m
 #Plotting different phenotypes with respect to litter with and without PCs 
 #(to see if PCs make litters more homogenous)
 
-boxplot(mouse.data$IMPC_HEM_001_001~mouse.data$litter)
 res1 = residuals(lm(IMPC_HEM_001_001~Comp.1+Comp.2, data=mouse.data))
+par(mfrow=c(2,1), mar=c(4,2,2,1))
+boxplot(mouse.data$IMPC_HEM_001_001~mouse.data$litter)
 boxplot(res1~mouse.data$litter)
+
+#Calculate quintiles of means of 1st PC
+mean_by_litter$comp1_level = cut(mean_by_litter$Comp.1, quantile(mean_by_litter$Comp.1, seq(0,1,1/20)), 
+                                 labels=1:20, include.lowest=TRUE)
+mouse.data$comp1_level = rep(0,NROW(mouse.data))
+for (l in mean_by_litter$litter) {
+  mouse.data[mouse.data$litter==l,]$comp1_level = mean_by_litter[mean_by_litter==l,]$comp1_level
+}
+
+#Trying K-means clustering based on PC1 and PC2
+clust = kmeans(pheno.pc$scores[,1:3], 15, nstart=20 )
+library(RColorBrewer)
+library(scales)
+palette(alpha(brewer.pal(9,'Set1'), 0.5))
+plot(pheno.pc$scores[,1:2], col=clust$clust, pch=16)
+
+mouse.data$kclust = factor(clust$clust)
+
+
+######################################
+#Deleting missing rows and testing predictive model on variables that had missing data before the deletion ####
+rows.missing = apply(as.matrix(mouse.data), 1, function(x){any(is.na(x))})
+mouse.nonmissing.rows = mouse.data[!rows.missing,]
+#Randomly delete observations from one variable for all observations of a given genotype
+set.seed(3487)
+rand.deleted.geno = sample(mouse.nonmissing.rows$geno[mouse.nonmissing.rows$geno!=0],1)
+
+#Prediction without PC category
+p1 = lm(IMPC_HEM_027_001~.-Comp.1-Comp.2-sum.pc-kclust, data=mouse.nonmissing.rows[,-c(1,3,4,30)],
+        subset = (mouse.nonmissing.rows$geno!=rand.deleted.geno))
+
+p1_predicted = predict(p1,
+                       newdata=mouse.nonmissing.rows[mouse.nonmissing.rows$geno==rand.deleted.geno,], 
+                       type="response")
+mean((p1_predicted-mouse.nonmissing.rows[mouse.nonmissing.rows$geno==rand.deleted.geno,]$IMPC_HEM_027_001)^2)
+
+#Prediction with PC category
+p1_cat = lm(IMPC_HEM_027_001~.-Comp.1-Comp.2-sum.pc-kclust, data=mouse.nonmissing.rows[,-c(1,3,4)],
+        subset = (mouse.nonmissing.rows$geno!=rand.deleted.geno))
+
+p1_predicted_cat = predict(p1_cat,
+                       newdata=mouse.nonmissing.rows[mouse.nonmissing.rows$geno==rand.deleted.geno,], 
+                       type="response")
+
+mean((p1_predicted_cat-mouse.nonmissing.rows[mouse.nonmissing.rows$geno==rand.deleted.geno,]$IMPC_HEM_027_001)^2)
+
+
+#Prediction using k-means clusters
+p1_clust = lm(IMPC_HEM_027_001~.-Comp.1-Comp.2-sum.pc-comp1_level, data=mouse.nonmissing.rows[,-c(1,3,4)],
+            subset = (mouse.nonmissing.rows$geno!=rand.deleted.geno))
+
+p1_predicted_clust = predict(p1_clust,
+                           newdata=mouse.nonmissing.rows[mouse.nonmissing.rows$geno==rand.deleted.geno,], 
+                           type="response")
+
+mean((p1_predicted_clust-mouse.nonmissing.rows[mouse.nonmissing.rows$geno==rand.deleted.geno,]$IMPC_HEM_027_001)^2)
+
+
+
+
+
+
+
 
 
 
