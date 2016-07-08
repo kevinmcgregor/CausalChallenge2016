@@ -18,8 +18,7 @@ Prediction of missing data
 
 Causal interpretation 
 - [Joint estimation of causal effects from observational and intervention gene expression data](http://bmcsystbiol.biomedcentral.com/articles/10.1186/1752-0509-7-111): really not sure if that would work for us. Top of page 2: this is the method applied in the `load_mouse_data.R` example R code provided with the challenge statement.
-- This is the [paper](ftp://ftp.sam.math.ethz.ch/sfs/pub/Manuscripts/buhlmann/pcalg-jss.pdf) introducing the `pcalg` package used in the example R code.
-- It seems like [this](http://onlinelibrary.wiley.com/doi/10.1111/rssb.12071/abstract?userIsAuthenticated=false&deniedAccessCustomisedMessage=) is what we are trying to do.
+- [Jointly interventional and observational data: estimation of interventional Markov equivalence classes of directed acyclic graphs](http://onlinelibrary.wiley.com/doi/10.1111/rssb.12071/abstract?userIsAuthenticated=false&deniedAccessCustomisedMessage=): it seems like this is what we are trying to do... See R documentation of the `pcalg` package
 
 
 
