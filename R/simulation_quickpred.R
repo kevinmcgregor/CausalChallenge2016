@@ -140,6 +140,66 @@ phen.matrix = as.matrix(full_mouse[,5:26])
 phen.matrix = phen.matrix[,colnames(phen.matrix)!="IMPC_HEM_027_001"]
 gam2 = gam(IMPC_HEM_027_001~s(phen.matrix,fx=FALSE,bs="tp"), data=full_mouse)
 
+#Trying simulation with only rows of variable IMPC_HEM_027_001 being removed
+
+set.seed(30062016)
+gam_res <- matrix(0, ncol = 2, nrow = Nsimul)
+geno = rep("", Nsimul)
+for (i in 1:Nsimul) {
+  # temporary dataframe
+  temp <- full_mouse
+  
+ 
+  # randomly select one variable among the 5 variables with missing values + one knock-out condition
+  NAgeno <- sample(unique(temp$geno)[2:9], 1)
+  NAvar <- "IMPC_HEM_029_001"
+  
+  # save true value + delete in temp
+  true <- temp[temp$geno == NAgeno, colnames(temp) == NAvar]
+  temp[temp$geno == NAgeno,  colnames(temp) == NAvar] <- NA
+  
+  #If var to predict is IMPC_HEM_027_001
+  #gam_obj = gam(IMPC_HEM_027_001~s(IMPC_HEM_002_001,IMPC_HEM_004_001, IMPC_HEM_005_001, IMPC_HEM_008_001,
+  #                             IMPC_HEM_019_001,fx=FALSE,bs="tp"), data=temp)
+  #ols_obj = lm(IMPC_HEM_027_001~IMPC_HEM_002_001+IMPC_HEM_004_001+IMPC_HEM_005_001+IMPC_HEM_008_001+
+  #                                IMPC_HEM_019_001, data=temp)
+  
+  
+  #If var to predict is IMPC_HEM_029_001
+  gam_obj = gam(IMPC_HEM_029_001~s(IMPC_HEM_002_001,IMPC_HEM_030_001, IMPC_HEM_033_001,
+                                   IMPC_HEM_035_001,IMPC_HEM_037_001,IMPC_HEM_038_001,
+                                   IMPC_HEM_040_001,fx=FALSE,bs="tp"), data=temp)
+  ols_obj = lm(IMPC_HEM_029_001~IMPC_HEM_002_001+IMPC_HEM_030_001+IMPC_HEM_033_001+
+               IMPC_HEM_035_001+IMPC_HEM_037_001+IMPC_HEM_038_001+
+               IMPC_HEM_040_001, data=temp)
+                                   
+  
+  
+  # column id of variable with missing values
+  id <- which(colnames(temp) == NAvar)
+
+  # get predictions
+  predic_gam <- predict(gam_obj, newdata = temp[is.na(temp[,id]),])
+  predic_ols <- predict(ols_obj, newdata = temp[is.na(temp[,id]),])
+  
+  # compute mse
+  mse_gam <- mse(actual = true, predicted = predic_gam)
+  mse_ols <- mse(actual = true, predicted = predic_ols)
+  
+  # save results
+  gam_res[i, ] <-  c(mse_gam, mse_ols)
+  geno[i] = NAgeno
+  
+  cat(i,"\n")
+}
+gam_res <- data.frame(geno, gam_res)
+colnames(gam_res) <- c("Genotype", "MSE_gam", "MSE_ols")
+
+write.csv(gam_res, file = "simulation_GAM.csv")
+
+mean(gam_res$MSE_gam)
+mean(gam_res$MSE_ols)
+
 
 
 
