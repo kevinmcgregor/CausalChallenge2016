@@ -47,6 +47,8 @@ cor(mouse[,which(colnames(mouse) %in% c("Large Unstained Cell (LUC) count", "Lar
 
 cor(mouse[,which(colnames(mouse) %in% c("Eosinophil differential count", "Eosinophil cell count", "Basophil cell count", "Basophil differential count"))])
 
+cor(mouse[,which(colnames(mouse) %in% c("Eosinophil differential count", "Basophil differential count", "Lymphocyte differential count", "Monocyte differential count", "Neutrophil differential count"))])
+
 # look at all cell counts
 cor(mouse[,which(colnames(mouse) %in% c("Lymphocyte cell count", "White blood cell count"))])
 
