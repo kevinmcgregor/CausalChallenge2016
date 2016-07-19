@@ -92,6 +92,7 @@ set.seed(30062016)
 
 res_mixed <- matrix(0, Nsimul, 5)
 colnames(res_mixed) = c("IMPC_HEM_027_001", "IMPC_HEM_029_001", "IMPC_HEM_031_001", "IMPC_HEM_034_001", "IMPC_HEM_038_001")
+sim_geno = matrix("", NSimul, 5)
 
 for(i in 1:Nsimul)
 {
@@ -104,6 +105,8 @@ for(i in 1:Nsimul)
   # randomly select phenotypes to be deleted
   NAgeno <- sample(unique(temp$geno)[2:9], 5)
   NAvar <- c("IMPC_HEM_027_001", "IMPC_HEM_029_001", "IMPC_HEM_031_001", "IMPC_HEM_034_001", "IMPC_HEM_038_001") 
+  
+  sim_geno[i,] = NAgeno
   
   # save true values + delete in temp
   true = list(IMPC_HEM_027_001=temp[temp$geno==NAgeno[1],NAvar[1]],
@@ -148,6 +151,95 @@ for(i in 1:Nsimul)
   
   cat(i, "\n")
 }
+
+
+save(res_mixed, sim_geno, file = "simulation_mixed.RData")
+
+boxplot(res_mixed, main = "Imputation via OLS")
+
+#Trying out splines
+library(splines)
+
+#Using splines on important variables for IMPC_HEM_029_001 and comparing to OLS
+#find important vars
+summary(lm(IMPC_HEM_029_001~.-id-geno-litter, data=full_mouse))
+plot(full_mouse$IMPC_HEM_031_001, full_mouse$IMPC_HEM_029_001)
+plot(full_mouse$IMPC_HEM_033_001, full_mouse$IMPC_HEM_029_001)
+plot(full_mouse$IMPC_HEM_035_001, full_mouse$IMPC_HEM_029_001)
+plot(full_mouse$IMPC_HEM_038_001, full_mouse$IMPC_HEM_029_001)
+plot(full_mouse$IMPC_HEM_040_001, full_mouse$IMPC_HEM_029_001)
+
+mod_31 = lm(IMPC_HEM_029_001~ns(IMPC_HEM_031_001,df=3)+
+                             ns(IMPC_HEM_033_001,df=3)+
+                             ns(IMPC_HEM_035_001,df=3)+
+                             ns(IMPC_HEM_038_001,df=3)+
+                             ns(IMPC_HEM_040_001,df=3), data=full_mouse)
+pred_31 = predict(mod_31, type="response")
+mse_31 = mse(pred_31, full_mouse$IMPC_HEM_029_001)
+
+mod_31_nosplines = lm(IMPC_HEM_029_001~.-id-litter-geno, data=full_mouse)
+pred_31_nosplines = predict(mod_31_nosplines, type="response")
+mse_31_nosplines = mse(pred_31_nosplines, full_mouse$IMPC_HEM_029_001)
+
+
+#Simulation with splines for IMPC_HEM_029_001
+Nsimul=500
+set.seed(30062016)
+
+res_splines <- matrix(0, Nsimul, 1)
+res_nosplines <- matrix(0, Nsimul, 1)
+colnames(res_splines) = colnames(res_nosplines) = "IMPC_HEM_029_001"
+#New data frame with splines basis vectors
+splines_mouse = data.frame(full_mouse, ns(full_mouse$IMPC_HEM_031_001,df=3),
+                                       ns(full_mouse$IMPC_HEM_033_001,df=3),
+                                       ns(full_mouse$IMPC_HEM_035_001,df=3),
+                                       ns(full_mouse$IMPC_HEM_038_001,df=3),
+                                       ns(full_mouse$IMPC_HEM_040_001,df=3))
+colnames(splines_mouse)[27:41] = paste0("S",1:15)
+for(i in 1:Nsimul)
+{
+  # temporary dataframe
+  temp <- splines_mouse
+  
+  # empty method vector
+  method_splines <- rep("", NCOL(temp)-2)
+  
+  # randomly select phenotypes to be deleted
+  NAgeno <- sample(unique(temp$geno)[2:9], 1)
+  NAvar <- c("IMPC_HEM_029_001") 
+  
+  # save true values + delete in temp
+  true = list(IMPC_HEM_029_001=temp[temp$geno==NAgeno,NAvar])
+  
+  temp[temp$geno == NAgeno,  colnames(temp) == NAvar] <- NA
+  
+  #Data frames with just splines
+  splines_alone = temp[,27:41]
+  splines_alone = cbind(splines_alone, IMPC_HEM_029_001=temp$IMPC_HEM_029_001)
+  
+  nosplines_data = temp[,-(27:41)]
+  
+  # column ids of variables with missing values
+  id <- which(colnames(temp) %in% NAvar)
+  
+  #Linear models
+  lm_splines = lm(IMPC_HEM_029_001~., data=splines_alone)
+  lm_nosplines = lm(temp$IMPC_HEM_029_001~., data=nosplines_data[,-c(1,3,4)])
+  
+  pred_splines = predict(lm_splines, newdata=splines_alone[is.na(temp[,id]),])
+  pred_nosplines = predict(lm_nosplines, newdata=temp[is.na(nosplines_data[,id]),])
+  
+  # save results
+  res_splines[i, ] <- mse(true[[1]], pred_splines)
+  res_nosplines[i, ] <- mse(true[[1]], pred_nosplines)
+  
+  cat(i, "\n")
+}
+
+
+
+
+
 
 
 
