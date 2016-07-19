@@ -1,6 +1,6 @@
 library(rms)
 library(mice)
-
+set.seed(213)
 # causal interpretation genotype-phenotype
 
 mouse.data <- readRDS("mouse_data.RDS")
