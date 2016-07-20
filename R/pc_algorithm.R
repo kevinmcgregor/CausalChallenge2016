@@ -1,9 +1,5 @@
 # following example in course/2012/ch25 - Discovering Causal Structure from Observations 
 
-library(pcalg)
-library(Rgraphviz)
-library(SMPracticals)
-
 ## example data
 data(mathmarks)
 suffStat <- list(C=cor(mathmarks), n=nrow(mathmarks))
@@ -21,6 +17,13 @@ suffStat <- list(C=cor(mouse), n=nrow(mouse))
 pc.fit <- pc(suffStat, indepTest=gaussCItest, p=ncol(mouse), alpha=0.005, verbose=TRUE, conservative = TRUE)
 plot(pc.fit, labels=seq(1:22), main="Inferred DAG for 22 phenotypic measurements", cex.lab = 2)
 # hard to interpret...
+
+## change order of variables in dataframe 1st preceeds last.
+mouse_order <- cbind(mouse[,11:22],mouse$`Platelet count`,mouse$Hemoglobin,mouse$`Red blood cell count`,mouse$`White blood cell count`,mouse$`Mean cell volume`,mouse$`Mean corpuscular hemoglobin`,mouse$`Mean cell hemoglobin concentration`,mouse$`Mean platelet volume`,mouse$`Red blood cell distribution width`, mouse$Hematocrit)
+
+suffStat <- list(C=cor(mouse_order), n=nrow(mouse_order))
+pc.fit <- pc(suffStat, indepTest=gaussCItest, p=ncol(mouse_order), alpha=0.005, verbose=TRUE)
+plot(pc.fit, labels=seq(1:22), main="Inferred DAG for 22 phenotypic measurements", cex.lab = 2)
 
 ## try deleting red and white blood cell count
 mouse1 <- mouse[,-c(1,2)]
