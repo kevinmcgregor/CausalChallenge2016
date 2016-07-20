@@ -18,7 +18,7 @@ colnames(mouse) <- var.names$nam
 
 cor(mouse)
 suffStat <- list(C=cor(mouse), n=nrow(mouse))
-pc.fit <- pc(suffStat, indepTest=gaussCItest, p=ncol(mouse), alpha=0.005, verbose=TRUE)
+pc.fit <- pc(suffStat, indepTest=gaussCItest, p=ncol(mouse), alpha=0.005, verbose=TRUE, conservative = TRUE)
 plot(pc.fit, labels=seq(1:22), main="Inferred DAG for 22 phenotypic measurements", cex.lab = 2)
 # hard to interpret...
 
