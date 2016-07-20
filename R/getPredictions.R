@@ -69,6 +69,16 @@ predictions = list(IMPC_HEM_027_001=predic$IMPC_HEM_027_001,
                    IMPC_HEM_034_001=predic_no29$IMPC_HEM_034_001,
                    IMPC_HEM_038_001=predic_no29$IMPC_HEM_038_001)
 
+#Final imputed dataset
+mouse.data.imp = mouse.data
+for (i in 1:5) {
+  mouse.data.imp[mouse.data.imp$geno==NAgeno[i],NAvar[i]] = predictions[[i]]
+}
+any(is.na(mouse.data.imp)) #SHOULD BE FALSE (i.e. no NAs present)
+
+save(predictions, mouse.data.imp, file="~/Documents/research/causal_challenge_repo/Results/FINAL_PREDICTIONS.RData")
+
+
 
 
 
