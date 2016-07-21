@@ -107,7 +107,7 @@ for(i in 1:Nsimul)
 
 res_replace29 = cbind(res[,1],res_no29[,2],res[,3:5])
 
-save(res, res_no29, sim_geno, file = "simulation_final.RData")
+save(res, res_no29, res_replace29, sim_geno, file = "simulation_final.RData")
 
 boxplot(res, main = "Imputation via MICE")
 boxplot(res_no29, main = "Imputation via MICE , var29 alone")
