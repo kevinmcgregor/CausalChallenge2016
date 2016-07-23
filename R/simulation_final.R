@@ -114,8 +114,52 @@ boxplot(res, main = "Imputation via MICE")
 boxplot(res_no29, main = "Imputation via MICE , var29 alone")
 boxplot(res_replace29, main = "Imputation via mice, \n var29 replaced in original")
 
+## PREDICTIONS OBTAINED BY ONLY CALCULATION DIFFERENTIAL COUNT = COUNT/WBC count
 
+# for lymphocyte diff. count
+colnames(full_mouse)[5:26] <- var.names$nam
 
+mse_lympho <- sum((full_mouse$`Lymphocyte cell count`/full_mouse$`White blood cell count` - full_mouse$`Lymphocyte differential count`/100)^2)
 
+# better than simulations?
+mean(res[,3])
+min(res[,3])
+mean(res_no29[,3])
+min(res_no29[,3])
+mean(res_replace29[,3])
+min(res_replace29[,3])
+mse_lympho
+# hell yeah
+
+# for basophil differential count
+mse_baso <- sum((full_mouse$`Basophil cell count`/full_mouse$`White blood cell count` - full_mouse$`Basophil differential count`/100)^2)
+mean(res[,5])
+min(res[,5])
+mean(res_no29[,5])
+min(res_no29[,5])
+mean(res_replace29[,5])
+min(res_replace29[,5])
+mse_baso
+# hell yeah too
+
+# for neutrophil diff. count
+mse_neut <- sum((full_mouse$`Neutrophil cell count`/full_mouse$`White blood cell count` - full_mouse$`Neutrophil differential count`/100)^2)
+mean(res[,2])
+min(res[,2])
+mean(res_no29[,2])
+min(res_no29[,2])
+mean(res_replace29[,2])
+mse_neut
+# NOT GOOD FOR NEUTRO
+
+# monocyte cell count
+mse_mono <- sum((full_mouse$`Monocyte differential count`/100*full_mouse$`White blood cell count`-full_mouse$`Monocyte cell count`)^2)
+mean(res[,4])
+min(res[,4])
+mean(res_no29[,4])
+min(res_no29[,4])
+mean(res_replace29[,4])
+mse_mono
+# NOT GOOD FOR MONO
 
 
