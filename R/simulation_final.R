@@ -7,6 +7,7 @@ library(Metrics)
 
 # read data
 mouse.data <- readRDS("mouse_data.rds")
+var.names = readRDS("variable_names.RDS")
 
 # consider only complete observations: delete genotypes with missing values
 full_mouse <- mouse.data[-which(mouse.data$geno %in% c("1796_1", "3621_1", "4045_1", "3803_1", "3887_1")),]
