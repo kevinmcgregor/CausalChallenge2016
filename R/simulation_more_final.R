@@ -104,6 +104,8 @@ for(i in 1:Nsimul)
   cat(i, "\n")
 }
 
+save(res_direct, file="simulation_more_final.RData")
+
 #Comparing to "final" simulation
 load("simulation_final.RData")
 
