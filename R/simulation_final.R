@@ -115,11 +115,68 @@ boxplot(res_no29, main = "Imputation via MICE , var29 alone")
 boxplot(res_replace29, main = "Imputation via mice, \n var29 replaced in original")
 
 ## PREDICTIONS OBTAINED BY ONLY CALCULATION DIFFERENTIAL COUNT = COUNT/WBC count
-
-# for lymphocyte diff. count
+full_mouse_est = full_mouse
 colnames(full_mouse)[5:26] <- var.names$nam
+colnames(full_mouse_est)[5:26] <- var.names$nam
 
-mse_lympho <- sum((full_mouse$`Lymphocyte cell count`/full_mouse$`White blood cell count` - full_mouse$`Lymphocyte differential count`/100)^2)
+###############
+#Playing around with this idea (Kevin's stuff) ####
+est_lymph_diff = full_mouse$`Lymphocyte cell count`/full_mouse$`White blood cell count`*100
+plot(est_lymph_diff, full_mouse$`Lymphocyte differential count`)
+abline(0,1,col='red')
+full_mouse_est$est_lymph_diff = est_lymph_diff
+
+est_baso_diff = full_mouse$`Basophil cell count`/full_mouse$`White blood cell count`*100
+plot(est_baso_diff, full_mouse$`Basophil differential count`)
+abline(0,1,col='red') #almost always over-estimates!
+full_mouse_est$est_baso_diff = est_baso_diff
+
+#Trying OLS prediction model using estimated basophil diff as a predictor (among the other vars)
+lm_baso = lm(`Basophil differential count`~.-geno-id-litter-est_lymph_diff-`White blood cell count`-`Basophil cell count`, 
+             data=full_mouse_est)
+baso_pred = predict(lm_baso)
+mse(baso_pred, full_mouse$`Basophil differential count`)
+#Does worse
+
+#Since just taking the ratio almost always overestimates, I'll try subtracting off the average bias
+bias_baso = mean(est_baso_diff-full_mouse$`Basophil differential count`)
+bias_baso=0
+plot(est_baso_diff-bias_baso, full_mouse$`Basophil differential count`)
+abline(0,1,col='red')
+mse(est_baso_diff-bias_baso, full_mouse$`Basophil differential count`)
+
+#Trying regression model for neutrophil differential using only the estimated neutrophil diff as a predictor
+est_neutro_diff = full_mouse$`Neutrophil cell count`/full_mouse$`White blood cell count`*100
+full_mouse_est$est_neutro_diff = est_neutro_diff
+lm_neutro = lm(`Neutrophil differential count`~.-geno-id-litter-est_lymph_diff-est_baso_diff, data=full_mouse_est)
+pred_neutro = exp(predict(lm_neutro))
+mse(pred_neutro, full_mouse$`Neutrophil differential count`)
+
+
+#Trying to see if I can better predict mean cell dist width
+#Since RBCDW = SD(cell volume)/mean(cell volume) we have that
+# SD(cell volume) = RBCDW*mean(cell volume).  So maybe we can better predict
+# the standard deviation of cell volume instead of RBCDW itself.  Can then just transform back to RBCDW.
+full_mouse$sdcv = full_mouse$`Mean cell volume`*full_mouse$`Red blood cell distribution width`/100
+
+cor(full_mouse[,5:27])[23,]
+
+lm_sdcv = lm(log(sdcv)~.-geno-id-litter-`Mean cell volume`-`Red blood cell distribution width`, data=full_mouse)
+pred_sdcv = exp(predict(lm_sdcv))
+pred_rbcdw = pred_sdcv/full_mouse$`Mean cell volume` * 100
+mse(pred_rbcdw, full_mouse$`Red blood cell distribution width`)
+
+#Kevin's notes... seems like the best option for lympho diff is by direct calculation, but for the others, our
+#original predictions should still be better.  For RBCDW the model that estimates the numerator on a log scale for
+#seems to do slightly better overall, but I will verify in the simulation.
+
+
+###############
+#Gabrielle's original stuff ####
+load("simulation_final.RData")
+# for lymphocyte diff. count
+
+mse_lympho <- mse(full_mouse$`Lymphocyte cell count`/full_mouse$`White blood cell count`*100,full_mouse$`Lymphocyte differential count`)
 
 # better than simulations?
 mean(res[,3])
@@ -132,7 +189,7 @@ mse_lympho
 # hell yeah
 
 # for basophil differential count
-mse_baso <- sum((full_mouse$`Basophil cell count`/full_mouse$`White blood cell count` - full_mouse$`Basophil differential count`/100)^2)
+mse_baso <- mse(full_mouse$`Basophil cell count`/full_mouse$`White blood cell count`*100, full_mouse$`Basophil differential count`)
 mean(res[,5])
 min(res[,5])
 mean(res_no29[,5])
@@ -143,7 +200,7 @@ mse_baso
 # hell yeah too
 
 # for neutrophil diff. count
-mse_neut <- sum((full_mouse$`Neutrophil cell count`/full_mouse$`White blood cell count` - full_mouse$`Neutrophil differential count`/100)^2)
+mse_neut <- mse(full_mouse$`Neutrophil cell count`/full_mouse$`White blood cell count`*100,full_mouse$`Neutrophil differential count`)
 mean(res[,2])
 min(res[,2])
 mean(res_no29[,2])
@@ -153,7 +210,7 @@ mse_neut
 # NOT GOOD FOR NEUTRO
 
 # monocyte cell count
-mse_mono <- sum((full_mouse$`Monocyte differential count`/100*full_mouse$`White blood cell count`-full_mouse$`Monocyte cell count`)^2)
+mse_mono <- mse(full_mouse$`Monocyte cell count`/full_mouse$`White blood cell count`*100, full_mouse$`Monocyte differential count`)
 mean(res[,4])
 min(res[,4])
 mean(res_no29[,4])
